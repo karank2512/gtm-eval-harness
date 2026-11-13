@@ -1,0 +1,19 @@
+{
+  "arms": [
+    "treatment",
+    "placebo",
+    "baseline"
+  ],
+  "backend": "claude-code",
+  "backend_detail": {
+    "backend": "claude-code",
+    "command": "/tmp/gtm-claude-subscription",
+    "model": "claude-fable-5-2"
+  },
+  "model": "claude-fable-5-2",
+  "n_leads": 120,
+  "results_path": "results/results.jsonl",
+  "runs": 3,
+  "seed": 20261114,
+  "warning": null
+}
