@@ -5,16 +5,18 @@ Generated 2026-11-14 from `results/results.jsonl`. Every number below is recompu
 ## Setup
 
 - backend: `claude-code` (model: `claude-fable-5-2`)
+- runtime: local Claude Code CLI on a Claude subscription - no API key, no usage billing; qualification calls run with tool use disabled
 - leads: 120 (synthetic, seed 20261114)
 - runs per arm: 3
 - arms: baseline, placebo, treatment
 
 ## Headline
 
-1. The pipeline routes 99.2% of leads to the right tier (357/360).
-2. On leads designed to fool it, accuracy is 100.0% (96/96) vs 98.9% on clean leads (261/264).
-3. Confidence is calibrated to ECE 0.137 over 360 scored calls
-4. Re-running the same leads flips the tier call on 0.0% of lead-runs (120 leads x repeated runs).
+1. Tier calls are near ceiling on this dataset: 99.2% of lead-runs tiered correctly (357/360).
+2. Routing is not: 89.2% of lead-runs routed correctly (321/360) - +6 lead-runs vs the deterministic rules baseline (315/360, 87.5%), so on this dataset the model's routing buys almost nothing over free rules.
+3. The leads designed to fool the qualifier did not: 96/96 tricky lead-runs tiered correctly vs 261/264 clean. The traps were calibrated for weaker qualifiers - a negative result, reported as one.
+4. Confidence is underconfident on this set: mean confidence 0.85 vs actual tier accuracy 99.2% (ECE 0.137), Brier 0.031 over 360 scored calls.
+5. Re-running the same leads flips the tier call on 0.0% of lead-runs (120 leads x repeated runs).
 
 ## Arm: baseline
 
@@ -164,9 +166,19 @@ Mean per-lead flip rate: 0.0% across 120 leads; accuracy spread across runs: 0.0
 
 Mean per-lead flip rate: 0.0% across 120 leads; accuracy spread across runs: 0.0%.
 
+## Limits
+
+- 120 synthetic leads x 3 repeats each: the per-arm row counts are lead-runs, not independent leads. Repeated runs of one lead share its label and its signals.
+- The placebo arm uses one fixed seeded derangement. A different permutation gives a different placebo number; treat it as a sanity floor, not a precise estimate.
+- Labels are hand-designed and unambiguous by construction. Real funnel data has contested labels, missing signals and drift; accuracy here is an upper bound, not a promise.
+- The dataset is synthetic and shaped like a generic PLG free-to-paid motion. It is not any company's production data.
+- Every claim is about this prompt + this model + this dataset. Change any of the three and re-run before reusing a number.
+
 ## How to reproduce
 
 ```sh
-python3 run_eval.py --backend claude-code --runs 3 --out results/results.jsonl
+python3 run_eval.py --backend claude-code --model claude-fable-5-2 --runs 3 --out results/results.jsonl
 python3 scripts/report.py --results results/results.jsonl --out REPORT.md
 ```
+
+Runs execute through the local Claude Code CLI on a Claude subscription; no API key is used and no usage billing is involved. Pin the model explicitly as shown so a report always names the model its numbers came from.

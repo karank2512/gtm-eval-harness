@@ -61,9 +61,13 @@ python3 run_eval.py --backend claude-code --runs 1 --limit 12 \
 
 Real runs call `claude -p` (the Claude Code CLI) once per lead per arm per
 run, so they execute on the machine's Claude subscription. **No API key is
-used and no usage billing is involved.** With the default dataset: 120 leads
-x 3 arms x 3 runs = 1080 calls, of which 720 hit the model (the baseline arm
-is deterministic). Use `--limit` and `--runs` to size a run to your session.
+used and no usage billing is involved.** The published run pinned the model
+explicitly (`--model claude-fable-5-2`) and disabled tool use for the
+qualification calls, so every call is a plain prompt-to-JSON completion -
+pass any tool-restriction flags your CLI setup uses via `--extra-args`.
+With the default dataset: 120 leads x 3 arms x 3 runs = 1080 calls, of
+which 720 hit the model (the baseline arm is deterministic). Use `--limit`
+and `--runs` to size a run to your session.
 
 ## The example dataset
 
@@ -92,6 +96,18 @@ python3 -m unittest discover -s tests -v
 
 ## Status of the numbers in this repo
 
-`results/` contains an example run produced with the mock backend, included
-only to show the report format. Measured model results land here after the
-first full Claude Code run and replace this note.
+`REPORT.md` and `results/results.jsonl` are a real measured run: 120
+synthetic leads x 3 repeats x 3 arms through Claude (model pinned in the
+report), executed via the local Claude Code CLI on a subscription - no API
+spend. Headline: tier calls land at 99.2% (357/360 lead-runs) with zero
+flips across repeats, but routing (89.2%, 321/360) beats the deterministic
+rules baseline (87.5%, 315/360) by only 6 lead-runs, and every routing miss
+over-routes the lead toward sales. Confidence is underconfident on this set
+(mean 0.85 vs 99.2% actual, ECE 0.137). The placebo arm sits at 27.5%,
+near chance, so the measurement responds to the inputs.
+
+Read the Limits section of the report before reusing any number: 120 leads
+with 3 repeats are 360 rows but only 120 independent cases, the labels are
+hand-designed, and the dataset is synthetic. `results/EXAMPLE-REPORT-mock.md`
+is a mock-backend run kept only to show the report format; it is labeled as
+such and is not a model result.

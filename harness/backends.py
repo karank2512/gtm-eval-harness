@@ -44,11 +44,13 @@ class ClaudeCodeBackend:
     name = "claude-code"
 
     def __init__(self, model: Optional[str] = None, command: str = "claude",
-                 timeout_s: int = 180, max_retries: int = 2):
+                 timeout_s: int = 180, max_retries: int = 2,
+                 extra_args: Optional[list] = None):
         self.model = model
         self.command = command
         self.timeout_s = timeout_s
         self.max_retries = max_retries
+        self.extra_args = list(extra_args or [])
         if shutil.which(command) is None:
             raise BackendError(
                 f"{command!r} not found on PATH. Install/sign in to Claude "
@@ -62,6 +64,7 @@ class ClaudeCodeBackend:
         argv = [self.command, "-p", "--output-format", "json"]
         if self.model:
             argv += ["--model", self.model]
+        argv += self.extra_args
         last_err = "unknown"
         for _attempt in range(self.max_retries + 1):
             try:

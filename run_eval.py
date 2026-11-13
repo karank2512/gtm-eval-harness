@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -35,6 +36,9 @@ def main() -> None:
                          "(default: the CLI's configured model)")
     ap.add_argument("--command", default="claude",
                     help="path to the Claude Code CLI")
+    ap.add_argument("--extra-args", default="",
+                    help="extra flags passed verbatim to the Claude Code CLI "
+                         "(e.g. tool-restriction flags your setup uses)")
     ap.add_argument("--arms", default="treatment,placebo,baseline")
     ap.add_argument("--runs", type=int, default=3)
     ap.add_argument("--limit", type=int, default=None,
@@ -54,7 +58,9 @@ def main() -> None:
         warning = ("MOCK BACKEND: deterministic test double, not a language "
                    "model. These numbers check harness math only.")
     else:
-        backend = ClaudeCodeBackend(model=args.model, command=args.command)
+        backend = ClaudeCodeBackend(
+            model=args.model, command=args.command,
+            extra_args=shlex.split(args.extra_args))
         warning = None
 
     arms = [a.strip() for a in args.arms.split(",") if a.strip()]
