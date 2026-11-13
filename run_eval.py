@@ -68,8 +68,16 @@ def main() -> None:
         if arm not in runner.ARMS:
             ap.error(f"unknown arm: {arm}")
 
-    counts = runner.run_all(leads, backend, arms, args.runs, args.seed,
-                            args.out, limit=args.limit)
+    from harness.backends import BackendError
+    try:
+        counts = runner.run_all(leads, backend, arms, args.runs, args.seed,
+                                args.out, limit=args.limit)
+    except BackendError as exc:
+        print(f"run aborted on the first CLI failure: {exc}\n"
+              f"partial output (if any) is preserved at {args.out}.partial; "
+              f"any previous complete results file is untouched.",
+              file=sys.stderr)
+        sys.exit(1)
 
     meta = {
         "backend": backend.name,
@@ -80,6 +88,7 @@ def main() -> None:
         "arms": arms,
         "results_path": args.out,
         "warning": warning,
+        "abort_on_first_cli_failure": True,
         "backend_detail": backend.describe(),
     }
     meta_path = args.meta_out or (args.out + ".meta.json")

@@ -44,13 +44,19 @@ class ClaudeCodeBackend:
     name = "claude-code"
 
     def __init__(self, model: Optional[str] = None, command: str = "claude",
-                 timeout_s: int = 180, max_retries: int = 2,
-                 extra_args: Optional[list] = None):
+                 timeout_s: int = 180,
+                 extra_args: Optional[list] = None,
+                 disable_tools: bool = True,
+                 no_session_persistence: bool = True):
         self.model = model
         self.command = command
         self.timeout_s = timeout_s
-        self.max_retries = max_retries
         self.extra_args = list(extra_args or [])
+        # Harness semantics: every qualification call is a stateless,
+        # tool-free prompt -> JSON completion. These are on by default so
+        # a fresh checkout reproduces published numbers exactly.
+        self.disable_tools = disable_tools
+        self.no_session_persistence = no_session_persistence
         if shutil.which(command) is None:
             raise BackendError(
                 f"{command!r} not found on PATH. Install/sign in to Claude "
@@ -58,43 +64,56 @@ class ClaudeCodeBackend:
 
     def describe(self) -> Dict[str, Any]:
         return {"backend": self.name, "model": self.model or "cli-default",
-                "command": self.command}
+                "command": self.command,
+                "disable_tools": self.disable_tools,
+                "no_session_persistence": self.no_session_persistence}
 
     def qualify(self, prompt: str, run_index: int = 0) -> BackendResponse:
+        """One call, one attempt. CLI failures raise BackendError
+        immediately (timeout, nonzero exit, or an is_error envelope) -
+        retrying would turn a broken setup into a slow expensive one.
+        Only an unparseable model answer comes back as an error row."""
         argv = [self.command, "-p", "--output-format", "json"]
         if self.model:
             argv += ["--model", self.model]
+        if self.disable_tools:
+            argv += ["--tools", ""]
+        if self.no_session_persistence:
+            argv += ["--no-session-persistence"]
         argv += self.extra_args
-        last_err = "unknown"
-        for _attempt in range(self.max_retries + 1):
-            try:
-                proc = subprocess.run(
-                    argv, input=prompt, capture_output=True, text=True,
-                    timeout=self.timeout_s)
-            except subprocess.TimeoutExpired:
-                last_err = f"timeout after {self.timeout_s}s"
-                continue
-            if proc.returncode != 0:
-                last_err = f"exit {proc.returncode}: {proc.stderr[:300]}"
-                continue
-            raw = proc.stdout
-            text = self._extract_text(raw)
-            try:
-                return BackendResponse(raw_text=text, call=parse_response(text))
-            except ValueError as exc:
-                return BackendResponse(raw_text=text, call=None,
-                                       error=f"parse: {exc}")
-        return BackendResponse(raw_text="", call=None, error=last_err)
+        try:
+            proc = subprocess.run(
+                argv, input=prompt, capture_output=True, text=True,
+                timeout=self.timeout_s)
+        except subprocess.TimeoutExpired as exc:
+            raise BackendError(
+                f"claude CLI timed out after {self.timeout_s}s") from exc
+        if proc.returncode != 0:
+            raise BackendError(
+                f"claude CLI exit {proc.returncode}: {proc.stderr[:300]}")
+        text = self._extract_text(proc.stdout)
+        try:
+            return BackendResponse(raw_text=text, call=parse_response(text))
+        except ValueError as exc:
+            return BackendResponse(raw_text=text, call=None,
+                                   error=f"parse: {exc}")
 
     @staticmethod
     def _extract_text(raw: str) -> str:
-        """Claude Code's --output-format json wraps the reply; unwrap it."""
+        """Claude Code's --output-format json wraps the reply; unwrap it.
+        An is_error envelope means the CLI itself failed (exit code can
+        still be 0), so it raises like any other CLI failure."""
         try:
             obj = json.loads(raw)
         except json.JSONDecodeError:
             return raw
-        if isinstance(obj, dict) and isinstance(obj.get("result"), str):
-            return obj["result"]
+        if isinstance(obj, dict):
+            if obj.get("is_error"):
+                raise BackendError(
+                    f"claude CLI returned an error envelope: "
+                    f"{str(obj.get('result'))[:300]}")
+            if isinstance(obj.get("result"), str):
+                return obj["result"]
         return raw
 
 

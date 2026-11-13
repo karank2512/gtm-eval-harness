@@ -92,6 +92,8 @@ def run_arm(leads: List[Dict[str, Any]], backend, arm: str, runs: int,
                 resp = BackendResponse(
                     raw_text=json.dumps(asdict(call)), call=call)
             else:
+                # A CLI failure raises out of here and aborts the run on
+                # the first failure; only parse problems become error rows.
                 resp = backend.qualify(pipeline.build_prompt(shown),
                                        run_index=run_index)
             yield {
@@ -115,11 +117,23 @@ def run_all(leads: List[Dict[str, Any]], backend, arms: Iterable[str],
             runs: int, seed: int, out_path: str,
             limit: Optional[int] = None) -> Dict[str, int]:
     counts: Dict[str, int] = {}
-    with open(out_path, "w", encoding="utf-8") as fh:
-        for arm in arms:
-            n = 0
-            for row in run_arm(leads, backend, arm, runs, seed, limit=limit):
-                fh.write(json.dumps(row, sort_keys=True) + "\n")
-                n += 1
-            counts[arm] = n
+    # Write to a sibling .partial file and move it into place only on
+    # success. On abort the .partial file is PRESERVED (it is evidence of
+    # how far the run got) and any previous complete results file at
+    # out_path is left untouched.
+    tmp_path = out_path + ".partial"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as fh:
+            for arm in arms:
+                n = 0
+                for row in run_arm(leads, backend, arm, runs, seed,
+                                   limit=limit):
+                    fh.write(json.dumps(row, sort_keys=True) + "\n")
+                    n += 1
+                counts[arm] = n
+    except BaseException:
+        # Do not delete tmp_path: the partial output stays on disk.
+        raise
+    import os
+    os.replace(tmp_path, out_path)
     return counts

@@ -62,9 +62,17 @@ python3 run_eval.py --backend claude-code --runs 1 --limit 12 \
 Real runs call `claude -p` (the Claude Code CLI) once per lead per arm per
 run, so they execute on the machine's Claude subscription. **No API key is
 used and no usage billing is involved.** The published run pinned the model
-explicitly (`--model claude-fable-5-2`) and disabled tool use for the
-qualification calls, so every call is a plain prompt-to-JSON completion -
-pass any tool-restriction flags your CLI setup uses via `--extra-args`.
+explicitly (`--model claude-fable-5-2`). Two flags are baked into the
+backend as defaults so a fresh checkout reproduces published numbers
+exactly: `--tools ''` (tool use disabled - every call is a stateless
+prompt-to-JSON completion) and `--no-session-persistence`. The runner is
+fail-fast: a CLI failure (signed out, timeout, nonzero exit, or an
+`is_error` envelope) aborts the run on the FIRST failure with no retries,
+the partial output is preserved at `<out>.partial`, and any previous
+complete results file is left untouched - so a broken setup can never
+masquerade as a completed run. Unparseable model answers are recorded as
+metric rows, never aborts. Pass any extra flags your CLI setup needs via
+`--extra-args`.
 With the default dataset: 120 leads x 3 arms x 3 runs = 1080 calls, of
 which 720 hit the model (the baseline arm is deterministic). Use `--limit`
 and `--runs` to size a run to your session.

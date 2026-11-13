@@ -5,7 +5,8 @@ Generated 2026-11-14 from `results/results.jsonl`. Every number below is recompu
 ## Setup
 
 - backend: `claude-code` (model: `claude-fable-5-2`)
-- runtime: local Claude Code CLI on a Claude subscription - no API key, no usage billing; qualification calls run with tool use disabled
+- runtime: local Claude Code CLI on a Claude subscription - no API key, no usage billing; qualification calls run with tool use disabled (`--tools ''`) and no session persistence (`--no-session-persistence`), so each call is a stateless prompt-to-JSON completion
+- fail-fast: the runner aborts on the FIRST CLI failure or timeout (no retries); partial output is preserved at `<out>.partial` and any previous complete results file is left untouched. Unparseable model answers are recorded as metric rows, never aborts
 - leads: 120 (synthetic, seed 20261114)
 - runs per arm: 3
 - arms: baseline, placebo, treatment
@@ -181,4 +182,4 @@ python3 run_eval.py --backend claude-code --model claude-fable-5-2 --runs 3 --ou
 python3 scripts/report.py --results results/results.jsonl --out REPORT.md
 ```
 
-Runs execute through the local Claude Code CLI on a Claude subscription; no API key is used and no usage billing is involved. Pin the model explicitly as shown so a report always names the model its numbers came from.
+Runs execute through the local Claude Code CLI on a Claude subscription; no API key is used and no usage billing is involved. Pin the model explicitly as shown so a report always names the model its numbers came from. Tool use is disabled and session persistence is off by default - the exact configuration the numbers above came from; pass `--extra-args` only if your CLI setup needs more. A failed CLI (signed out, timeout, error envelope) aborts the run on the first failure and preserves partial output at `results/results.jsonl.partial`.

@@ -57,7 +57,16 @@ def render(summary: Dict[str, Any], meta: Dict[str, Any]) -> str:
     if meta.get("backend") == "claude-code":
         lines.append("- runtime: local Claude Code CLI on a Claude "
                      "subscription - no API key, no usage billing; "
-                     "qualification calls run with tool use disabled")
+                     "qualification calls run with tool use disabled "
+                     "(`--tools ''`) and no session persistence "
+                     "(`--no-session-persistence`), so each call is a "
+                     "stateless prompt-to-JSON completion")
+        lines.append("- fail-fast: the runner aborts on the FIRST CLI "
+                     "failure or timeout (no retries); partial output is "
+                     "preserved at `<out>.partial` and any previous "
+                     "complete results file is left untouched. Unparseable "
+                     "model answers are recorded as metric rows, never "
+                     "aborts")
     lines.append(f"- leads: {meta.get('n_leads', 'n/a')} "
                  f"(synthetic, seed {meta.get('seed', 'n/a')})")
     lines.append(f"- runs per arm: {meta.get('runs', 'n/a')}")
@@ -221,6 +230,12 @@ def render(summary: Dict[str, Any], meta: Dict[str, Any]) -> str:
                      "Claude subscription; no API key is used and no usage "
                      "billing is involved. Pin the model explicitly as shown "
                      "so a report always names the model its numbers came "
-                     "from.")
+                     "from. Tool use is disabled and session persistence is "
+                     "off by default - the exact configuration the numbers "
+                     "above came from; pass `--extra-args` only if your CLI "
+                     "setup needs more. A failed CLI (signed out, timeout, "
+                     "error envelope) aborts the run on the first failure "
+                     "and preserves partial output at "
+                     "`results/results.jsonl.partial`.")
         lines.append("")
     return "\n".join(lines)
