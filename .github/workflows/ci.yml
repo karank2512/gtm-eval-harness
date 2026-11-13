@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: smoke run (mock backend)
+        run: |
+          python3 scripts/generate_leads.py --n 36 --out /tmp/leads.jsonl
+          python3 run_eval.py --backend mock --runs 2 \
+              --data /tmp/leads.jsonl --out /tmp/results.jsonl
+          python3 scripts/report.py --results /tmp/results.jsonl \
+              --out /tmp/REPORT.md
+          grep -q "MOCK BACKEND" /tmp/REPORT.md

@@ -1,0 +1,20 @@
+{
+  "arms": [
+    "treatment",
+    "placebo",
+    "baseline"
+  ],
+  "backend": "mock-test-only",
+  "backend_detail": {
+    "backend": "mock-test-only",
+    "noise": 0.12,
+    "seed": 20261114,
+    "warning": "deterministic test double, not a model"
+  },
+  "model": null,
+  "n_leads": 120,
+  "results_path": "results/example-mock.jsonl",
+  "runs": 3,
+  "seed": 20261114,
+  "warning": "MOCK BACKEND: deterministic test double, not a language model. These numbers check harness math only."
+}

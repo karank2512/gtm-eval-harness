@@ -1,0 +1,97 @@
+# gtm-eval-harness
+
+Does your LLM lead-qualification pipeline actually work?
+
+PLG companies now run language models inside the funnel: qualifying signups,
+scoring fit, routing leads to sales. Almost nobody measures whether those
+calls are right. This harness does, the way you'd test a drug: a treatment
+arm, a placebo arm, denominators on every number, and negative results
+reported as findings.
+
+## What it measures
+
+Given a lead-qualification prompt (yours, or the included example) and a set
+of labeled leads, the harness reports:
+
+- **Tier and routing accuracy** by true segment, with `correct/n` on every
+  line - no bare percentages.
+- **Confusion pairs**, most frequent first - e.g. enterprises misrouted as
+  personal developers, buying-intent teams marked low-fit.
+- **Clean vs tricky gap** - the dataset includes leads designed to fool a
+  qualifier (an enterprise employee's personal project; an enterprise with
+  tiny usage mid-evaluation; a heavy team that isn't enterprise).
+- **Calibration** - ECE and Brier score of the model's own confidence vs how
+  often it's right.
+- **Run-to-run stability** - how often re-running the same lead flips the
+  call, and the accuracy spread across runs.
+- **Parse failures** as a first-class metric, not silently dropped rows.
+
+Three arms, run side by side:
+
+| arm | what it is | what it tells you |
+|---|---|---|
+| `treatment` | your qualification prompt on the real leads | the number you care about |
+| `placebo` | same prompts, each lead's signals swapped with another lead's | if accuracy survives this, the measurement is broken, not the model |
+| `baseline` | deterministic rules, no model | what you already get for free |
+
+## Quickstart
+
+No dependencies beyond Python 3.10+ and, for real runs, an authenticated
+Claude Code CLI.
+
+```sh
+# 1. generate the example dataset (synthetic PLG leads, seeded)
+python3 scripts/generate_leads.py --n 120 --out data/leads.jsonl
+
+# 2. run the eval through Claude Code (subscription - no API key, no usage billing)
+python3 run_eval.py --backend claude-code --runs 3 --out results/results.jsonl
+
+# 3. regenerate REPORT.md from the results (all figures recomputed)
+python3 scripts/report.py --results results/results.jsonl --out REPORT.md
+```
+
+A smoke run first is cheap and catches prompt/parse problems:
+
+```sh
+python3 run_eval.py --backend claude-code --runs 1 --limit 12 \
+    --out results/smoke.jsonl
+```
+
+## Execution method and cost
+
+Real runs call `claude -p` (the Claude Code CLI) once per lead per arm per
+run, so they execute on the machine's Claude subscription. **No API key is
+used and no usage billing is involved.** With the default dataset: 120 leads
+x 3 arms x 3 runs = 1080 calls, of which 720 hit the model (the baseline arm
+is deterministic). Use `--limit` and `--runs` to size a run to your session.
+
+## The example dataset
+
+`data/leads.jsonl` is fully synthetic (seeded generator, no real company
+data) and shaped like a PLG free-to-paid motion: personal developers, teams,
+and enterprises, with the signals a qualifier would actually see - seats,
+devices, features used, pricing questions, domain claims. ~25% of leads are
+deliberately tricky, with the label reasoning documented in each record.
+Point the harness at your own labeled leads by writing the same JSONL schema.
+
+## Honesty rules this repo follows
+
+- Every number in REPORT.md is recomputed from results JSONL by
+  `scripts/report.py`. Nothing is typed by hand.
+- The placebo arm ships on by default; a harness that can't fail isn't a
+  measurement.
+- The `mock` backend is a deterministic test double for CI. Its numbers check
+  harness math only and are labeled as such wherever they appear. They are
+  not model results.
+
+## Development
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+## Status of the numbers in this repo
+
+`results/` contains an example run produced with the mock backend, included
+only to show the report format. Measured model results land here after the
+first full Claude Code run and replace this note.
