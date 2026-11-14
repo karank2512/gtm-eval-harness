@@ -13,6 +13,7 @@ Two ways to make qualification calls:
 from __future__ import annotations
 
 import json
+import os
 import random
 import shutil
 import subprocess
@@ -32,6 +33,9 @@ class BackendResponse:
     raw_text: str
     call: Optional[QualificationCall]
     error: Optional[str] = None
+    # Record-only details from the CLI envelope (v2 world runs); never
+    # used to decide correctness.
+    meta: Optional[Dict[str, Any]] = None
 
 
 class ClaudeCodeBackend:
@@ -47,10 +51,16 @@ class ClaudeCodeBackend:
                  timeout_s: int = 180,
                  extra_args: Optional[list] = None,
                  disable_tools: bool = True,
-                 no_session_persistence: bool = True):
+                 no_session_persistence: bool = True,
+                 cwd: Optional[str] = None):
         self.model = model
         self.command = command
         self.timeout_s = timeout_s
+        # Working directory for the CLI process. None (v1 behavior)
+        # inherits the caller's. v2 world runs pass an empty scratch
+        # directory so nothing from the repository sits in the CLI's
+        # working directory.
+        self.cwd = cwd
         self.extra_args = list(extra_args or [])
         # Harness semantics: every qualification call is a stateless,
         # tool-free prompt -> JSON completion. These are on by default so
@@ -61,19 +71,27 @@ class ClaudeCodeBackend:
             raise BackendError(
                 f"{command!r} not found on PATH. Install/sign in to Claude "
                 "Code on this machine first (subscription, not API key).")
+        # A relative launcher path would stop resolving once cwd changes.
+        self._argv0 = (os.path.abspath(shutil.which(command))
+                       if cwd is not None else command)
 
     def describe(self) -> Dict[str, Any]:
-        return {"backend": self.name, "model": self.model or "cli-default",
-                "command": self.command,
-                "disable_tools": self.disable_tools,
-                "no_session_persistence": self.no_session_persistence}
+        detail = {"backend": self.name, "model": self.model or "cli-default",
+                  "command": self.command,
+                  "disable_tools": self.disable_tools,
+                  "no_session_persistence": self.no_session_persistence}
+        if self.cwd is not None:
+            detail["cli_working_directory"] = "empty scratch directory"
+            detail["timeout_s"] = self.timeout_s
+            detail["extra_args"] = list(self.extra_args)
+        return detail
 
     def qualify(self, prompt: str, run_index: int = 0) -> BackendResponse:
         """One call, one attempt. CLI failures raise BackendError
         immediately (timeout, nonzero exit, or an is_error envelope) -
         retrying would turn a broken setup into a slow expensive one.
         Only an unparseable model answer comes back as an error row."""
-        argv = [self.command, "-p", "--output-format", "json"]
+        argv = [self._argv0, "-p", "--output-format", "json"]
         if self.model:
             argv += ["--model", self.model]
         if self.disable_tools:
@@ -84,7 +102,7 @@ class ClaudeCodeBackend:
         try:
             proc = subprocess.run(
                 argv, input=prompt, capture_output=True, text=True,
-                timeout=self.timeout_s)
+                timeout=self.timeout_s, cwd=self.cwd)
         except subprocess.TimeoutExpired as exc:
             raise BackendError(
                 f"claude CLI timed out after {self.timeout_s}s") from exc
@@ -92,11 +110,27 @@ class ClaudeCodeBackend:
             raise BackendError(
                 f"claude CLI exit {proc.returncode}: {proc.stderr[:300]}")
         text = self._extract_text(proc.stdout)
+        meta = self._extract_meta(proc.stdout)
         try:
-            return BackendResponse(raw_text=text, call=parse_response(text))
+            return BackendResponse(raw_text=text, call=parse_response(text),
+                                   meta=meta)
         except ValueError as exc:
             return BackendResponse(raw_text=text, call=None,
-                                   error=f"parse: {exc}")
+                                   error=f"parse: {exc}", meta=meta)
+
+    @staticmethod
+    def _extract_meta(raw: str) -> Dict[str, Any]:
+        """Model identifiers the CLI envelope reports, if it reports any.
+        Recorded for disclosure only: the envelope format is the CLI's,
+        not this harness's, so nothing is enforced on it."""
+        try:
+            obj = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+        usage = obj.get("modelUsage") if isinstance(obj, dict) else None
+        if isinstance(usage, dict):
+            return {"reported_models": sorted(str(k) for k in usage)}
+        return {}
 
     @staticmethod
     def _extract_text(raw: str) -> str:

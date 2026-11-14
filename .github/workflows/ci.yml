@@ -6,8 +6,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned image, so the runner (and the Python builds available for
+    # it) cannot change underneath the version matrix.
+    runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.12"]
     steps:
@@ -15,9 +18,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: unit tests
+      # Nothing in this workflow calls a model: tests use the mock
+      # backend or a fake CLI script, and the freshness check only
+      # re-reads tracked data.
+      - name: unit and integration tests
         run: python3 -m unittest discover -s tests -v
-      - name: smoke run (mock backend)
+      - name: report freshness (regenerate tracked reports from tracked data, diff)
+        run: python3 scripts/check_freshness.py
+      - name: v1 legacy smoke run (mock backend)
         run: |
           python3 scripts/generate_leads.py --n 36 --out /tmp/leads.jsonl
           python3 run_eval.py --backend mock --runs 2 \
@@ -25,3 +33,14 @@ jobs:
           python3 scripts/report.py --results /tmp/results.jsonl \
               --out /tmp/REPORT.md
           grep -q "MOCK BACKEND" /tmp/REPORT.md
+          grep -q "V1 LEGACY GRADING" /tmp/REPORT.md
+      - name: v2 world-state run, offline grade, report (mock backend)
+        run: |
+          python3 run_world_eval.py --backend mock --runs 2 \
+              --data /tmp/leads.jsonl --run-dir /tmp/world-mock
+          python3 scripts/grade_world.py --run-dir /tmp/world-mock \
+              --data /tmp/leads.jsonl --out /tmp/world-grade.json
+          python3 scripts/world_report.py --run-dir /tmp/world-mock \
+              --data /tmp/leads.jsonl --out /tmp/WORLD-REPORT.md
+          grep -q "MOCK BACKEND" /tmp/WORLD-REPORT.md
+          grep -q "v2 world-state report" /tmp/WORLD-REPORT.md

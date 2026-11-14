@@ -1,8 +1,20 @@
-"""REPORT.md generation. Every figure is recomputed from results JSONL."""
+"""REPORT.md generation, v1 LEGACY grading.
+
+Every figure is recomputed from a v1 results JSONL: the runner's own log
+of what the qualifier answered, next to labels copied into the same log.
+There is no CRM world-state evidence in that format, and this renderer
+never pretends there is. World-state reports are world_report.py.
+
+The report date comes from the run metadata (`completed_at_utc`), never
+the wall clock, so regenerating a report on another day gives the same
+bytes. v1 metadata written before that field existed has no date, and the
+report says so instead of inventing one.
+"""
 
 from __future__ import annotations
 
-import datetime
+import json
+import os
 from typing import Any, Dict, Optional
 
 from . import metrics
@@ -43,12 +55,25 @@ def _calibration_phrase(acc: Optional[float], mean_conf: Optional[float],
 
 def render(summary: Dict[str, Any], meta: Dict[str, Any]) -> str:
     lines = []
-    lines.append("# GTM lead-qualification eval - report")
+    lines.append("# GTM lead-qualification eval - report "
+                 "(v1 legacy grading)")
     lines.append("")
-    lines.append(f"Generated {datetime.date.today().isoformat()} from "
-                 f"`{meta.get('results_path', 'results file')}`. "
+    completed = meta.get("completed_at_utc")
+    dated = (f"run completed {completed}" if completed
+             else "run date not recorded in this run's v1 metadata")
+    lines.append(f"Generated from "
+                 f"`{meta.get('results_path', 'results file')}` ({dated}). "
                  "Every number below is recomputed from that file by "
                  "`scripts/report.py`; none are typed by hand.")
+    lines.append("")
+    lines.append("**V1 LEGACY GRADING:** correctness here is the "
+                 "qualifier's parsed answer compared with labels stored in "
+                 "the same results log. There is no CRM world-state "
+                 "evidence behind these numbers, the run was not "
+                 "preregistered, and unparseable answers are counted "
+                 "separately rather than in the accuracy denominators. "
+                 "World-state grading is the separate v2 mode "
+                 "(`run_world_eval.py`, `scripts/world_report.py`).")
     lines.append("")
     lines.append("## Setup")
     lines.append("")
@@ -239,3 +264,18 @@ def render(summary: Dict[str, Any], meta: Dict[str, Any]) -> str:
                      "`results/results.jsonl.partial`.")
         lines.append("")
     return "\n".join(lines)
+
+
+def build_report(results_path: str, meta_path: Optional[str] = None) -> str:
+    """Render the v1 legacy report for a results file and its metadata.
+    Deterministic: depends only on the two files."""
+    meta_path = meta_path or (results_path + ".meta.json")
+    if os.path.exists(meta_path):
+        with open(meta_path, "r", encoding="utf-8") as fh:
+            meta = json.load(fh)
+    else:
+        meta = {"results_path": results_path, "backend": "unknown"}
+    meta.setdefault("results_path", results_path)
+    meta["backend_name_for_cli"] = (
+        "mock" if meta.get("backend") == "mock-test-only" else "claude-code")
+    return render(metrics.summarize(results_path), meta)

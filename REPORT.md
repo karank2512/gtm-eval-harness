@@ -1,6 +1,8 @@
-# GTM lead-qualification eval - report
+# GTM lead-qualification eval - report (v1 legacy grading)
 
-Generated 2026-11-14 from `results/results.jsonl`. Every number below is recomputed from that file by `scripts/report.py`; none are typed by hand.
+Generated from `results/results.jsonl` (run date not recorded in this run's v1 metadata). Every number below is recomputed from that file by `scripts/report.py`; none are typed by hand.
+
+**V1 LEGACY GRADING:** correctness here is the qualifier's parsed answer compared with labels stored in the same results log. There is no CRM world-state evidence behind these numbers, the run was not preregistered, and unparseable answers are counted separately rather than in the accuracy denominators. World-state grading is the separate v2 mode (`run_world_eval.py`, `scripts/world_report.py`).
 
 ## Setup
 

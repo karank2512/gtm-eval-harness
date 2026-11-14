@@ -1,0 +1,36 @@
+{
+  "backend": {
+    "backend": "mock-test-only",
+    "noise": 0.12,
+    "seed": 20261114,
+    "warning": "deterministic test double, not a model"
+  },
+  "config": {
+    "arms": [
+      "treatment",
+      "placebo",
+      "baseline"
+    ],
+    "limit": null,
+    "n_leads": 120,
+    "n_model_calls": 720,
+    "n_trials": 1080,
+    "runs": 3,
+    "seed": 20261114
+  },
+  "dataset_sha256": "3b40af0733f0b768c04695d60726c295c7e536a320ea69aebd993b49e5b72277",
+  "environment": {
+    "platform": "darwin",
+    "python": "3.13.2",
+    "sqlite": "3.51.2"
+  },
+  "grading": "v2-world-state",
+  "kind": "mock",
+  "plan_sha256": "e80e33f831fe865a4468980d41937e9b74110f690e45869290c1ecd4d69ae482",
+  "preregistered": false,
+  "preregistration": null,
+  "schema": "gtm-run-receipt/1",
+  "started_at_utc": "2026-11-14T05:36:01Z",
+  "stopping_rule": "abort on the first CLI failure, no retries; an aborted run has no manifest and is never graded as complete",
+  "warning": "MOCK BACKEND: deterministic test double, not a language model. These numbers check harness math only."
+}

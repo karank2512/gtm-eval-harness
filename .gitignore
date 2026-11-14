@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
 results/smoke*.jsonl
+results/smoke*.jsonl.meta.json
 .DS_Store

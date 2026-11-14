@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Run the lead-qualification eval.
+"""Run the lead-qualification eval - v1 LEGACY mode.
+
+Kept so the published v1 results stay reproducible. Grading in this mode
+is from the results log alone (the qualifier's parsed answer vs labels in
+the same log): no CRM world state, no preregistration. For world-state
+grading use run_world_eval.py.
 
 Real runs use the Claude Code CLI on this machine (subscription, no API key):
 
@@ -15,6 +20,7 @@ Tests/CI use the mock backend (deterministic, NOT a model):
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import shlex
@@ -89,6 +95,11 @@ def main() -> None:
         "results_path": args.out,
         "warning": warning,
         "abort_on_first_cli_failure": True,
+        "grading": "v1-legacy-log",
+        # Recorded once, here, so reports can be dated from the artifact
+        # instead of the day they happen to be rendered.
+        "completed_at_utc": datetime.datetime.now(
+            datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "backend_detail": backend.describe(),
     }
     meta_path = args.meta_out or (args.out + ".meta.json")

@@ -1,0 +1,5 @@
+# Sealed run artifacts are compared by sha256: never normalise them.
+*.sqlite binary
+results/** -text
+data/*.jsonl -text
+docs/preregistrations/* -text

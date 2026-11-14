@@ -1,0 +1,358 @@
+{
+  "decision_criteria": [
+    {
+      "all_of": [
+        {
+          "arm": "placebo",
+          "metric": "tier_effect_accuracy",
+          "op": "<=",
+          "value": "0.50"
+        },
+        {
+          "arm": "treatment",
+          "metric": "tier_effect_accuracy_diff",
+          "op": ">=",
+          "value": "0.25",
+          "vs": "placebo"
+        }
+      ],
+      "id": "H1",
+      "if_met": "The measurement responds to the leads' own signals; the treatment figures are interpretable.",
+      "if_not_met": "The measurement is declared invalid for this run: no treatment or baseline-delta claim is made from it.",
+      "label": "Placebo control (validity gate)"
+    },
+    {
+      "all_of": [
+        {
+          "arm": "treatment",
+          "metric": "tier_effect_accuracy",
+          "op": ">=",
+          "value": "0.95"
+        },
+        {
+          "arm": "treatment",
+          "metric": "tier_effect_accuracy_diff",
+          "op": ">",
+          "value": "0",
+          "vs": "baseline"
+        }
+      ],
+      "id": "H2",
+      "if_met": "Replicates v1 under world-state grading: tier effects are near ceiling on this dataset and above the rules baseline.",
+      "if_not_met": "v1's tier result did not replicate under world-state grading; reported as a non-replication with the observed counts.",
+      "label": "Tier effect near ceiling and above rules (v1 replication)"
+    },
+    {
+      "all_of": [
+        {
+          "arm": "treatment",
+          "metric": "abs_route_effect_accuracy_diff",
+          "op": "<=",
+          "value": "0.05",
+          "vs": "baseline"
+        }
+      ],
+      "id": "H3",
+      "if_met": "Replicates v1: the model's routing effect is within 5 points of the free rules baseline on this dataset.",
+      "if_not_met": "Does not replicate v1's routing finding; the direction and size are reported as observed, with no superiority claim in either direction.",
+      "label": "No practically meaningful routing advantage over rules (v1 replication)"
+    },
+    {
+      "all_of": [
+        {
+          "metric": "undelivered_trials",
+          "op": "==",
+          "value": "0"
+        }
+      ],
+      "id": "H4",
+      "if_met": "Every planned decision produced a consistent CRM effect (tier, queue and dispatch receipt).",
+      "if_not_met": "Some decisions produced no consistent CRM effect (unparseable, dropped or inconsistent); they are failures in every figure and are counted by kind.",
+      "label": "Every planned decision is delivered"
+    }
+  ],
+  "design": {
+    "arms": [
+      "treatment",
+      "placebo",
+      "baseline"
+    ],
+    "backend": {
+      "backend": "claude-code",
+      "cli_working_directory": "empty scratch directory",
+      "disable_tools": true,
+      "extra_args": [],
+      "model": "claude-fable-5-2",
+      "no_session_persistence": true,
+      "timeout_s": 180
+    },
+    "dataset": {
+      "description": "synthetic PLG leads, seeded generator (scripts/generate_leads.py --n 120 --seed 20261114); public, already used by v1",
+      "path": "data/leads.jsonl",
+      "sha256": "3b40af0733f0b768c04695d60726c295c7e536a320ea69aebd993b49e5b72277"
+    },
+    "primary": {
+      "inventory": {
+        "arms": [
+          "treatment",
+          "placebo",
+          "baseline"
+        ],
+        "lead_ids": [
+          "L0001",
+          "L0002",
+          "L0003",
+          "L0004",
+          "L0005",
+          "L0006",
+          "L0007",
+          "L0008",
+          "L0009",
+          "L0010",
+          "L0011",
+          "L0012",
+          "L0013",
+          "L0014",
+          "L0015",
+          "L0016",
+          "L0017",
+          "L0018",
+          "L0019",
+          "L0020",
+          "L0021",
+          "L0022",
+          "L0023",
+          "L0024",
+          "L0025",
+          "L0026",
+          "L0027",
+          "L0028",
+          "L0029",
+          "L0030",
+          "L0031",
+          "L0032",
+          "L0033",
+          "L0034",
+          "L0035",
+          "L0036",
+          "L0037",
+          "L0038",
+          "L0039",
+          "L0040",
+          "L0041",
+          "L0042",
+          "L0043",
+          "L0044",
+          "L0045",
+          "L0046",
+          "L0047",
+          "L0048",
+          "L0049",
+          "L0050",
+          "L0051",
+          "L0052",
+          "L0053",
+          "L0054",
+          "L0055",
+          "L0056",
+          "L0057",
+          "L0058",
+          "L0059",
+          "L0060",
+          "L0061",
+          "L0062",
+          "L0063",
+          "L0064",
+          "L0065",
+          "L0066",
+          "L0067",
+          "L0068",
+          "L0069",
+          "L0070",
+          "L0071",
+          "L0072",
+          "L0073",
+          "L0074",
+          "L0075",
+          "L0076",
+          "L0077",
+          "L0078",
+          "L0079",
+          "L0080",
+          "L0081",
+          "L0082",
+          "L0083",
+          "L0084",
+          "L0085",
+          "L0086",
+          "L0087",
+          "L0088",
+          "L0089",
+          "L0090",
+          "L0091",
+          "L0092",
+          "L0093",
+          "L0094",
+          "L0095",
+          "L0096",
+          "L0097",
+          "L0098",
+          "L0099",
+          "L0100",
+          "L0101",
+          "L0102",
+          "L0103",
+          "L0104",
+          "L0105",
+          "L0106",
+          "L0107",
+          "L0108",
+          "L0109",
+          "L0110",
+          "L0111",
+          "L0112",
+          "L0113",
+          "L0114",
+          "L0115",
+          "L0116",
+          "L0117",
+          "L0118",
+          "L0119",
+          "L0120"
+        ],
+        "run_indexes": [
+          0,
+          1,
+          2
+        ],
+        "trial_id_format": "<arm>/r<run_index>/<lead_id>",
+        "worlds": 9
+      },
+      "limit": null,
+      "n_leads": 120,
+      "n_model_calls": 720,
+      "n_trials": 1080,
+      "n_trials_per_arm": 360,
+      "plan_sha256": "e80e33f831fe865a4468980d41937e9b74110f690e45869290c1ecd4d69ae482",
+      "runs": 3
+    },
+    "results_root": "results/v2/gtm-v2-20261114",
+    "seed": 20261114,
+    "smoke": {
+      "inventory": {
+        "arms": [
+          "treatment",
+          "placebo",
+          "baseline"
+        ],
+        "lead_ids": [
+          "L0001",
+          "L0002",
+          "L0003",
+          "L0004",
+          "L0005",
+          "L0006",
+          "L0007",
+          "L0008",
+          "L0009",
+          "L0010",
+          "L0011",
+          "L0012"
+        ],
+        "run_indexes": [
+          0
+        ],
+        "trial_id_format": "<arm>/r<run_index>/<lead_id>",
+        "worlds": 3
+      },
+      "limit": 12,
+      "n_leads": 12,
+      "n_model_calls": 24,
+      "n_trials": 36,
+      "n_trials_per_arm": 12,
+      "plan_sha256": "99e1241050ac304bb985d15bb7f7deae857b6f48bd9b8f164dbffbd39658894a",
+      "runs": 1
+    }
+  },
+  "deviations": "any change to a pinned input after registration invalidates this preregistration for the run; it needs a new preregistration id and commit, and the report must say so",
+  "disclosure": "Not a held-out confirmatory study. The v1 run (same public synthetic dataset, same prompt, same model id) was completed and its results seen before this preregistration was written. v2 is an engineering replication under a stricter grading path; the criteria below were chosen with v1's numbers in view.",
+  "document": "docs/preregistrations/gtm-v2-20261114.md",
+  "id": "gtm-v2-20261114",
+  "metrics": {
+    "failure_handling": "unparseable answers, dropped dispatches and inconsistent effects stay in the denominator as failures; none are excluded",
+    "inference": "descriptive only: no significance test, no p-value, no superiority claim; thresholds are prespecified descriptive criteria on a small synthetic dataset",
+    "planned_comparisons": [
+      "treatment vs baseline, tier and route: per-lead paired difference in share of correct runs (n = 120 leads): mean difference, leads better / worse / tied, lead-run delta",
+      "treatment vs placebo, tier and route: same summary"
+    ],
+    "primary": [
+      {
+        "definition": "lead-runs whose CRM lead record carries the true tier, confirmed by a matching dispatch receipt",
+        "denominator": "all planned lead-runs in the arm (360)",
+        "name": "tier effect accuracy"
+      },
+      {
+        "definition": "lead-runs whose lead is a member of the true route's queue, confirmed by a matching dispatch receipt",
+        "denominator": "all planned lead-runs in the arm (360)",
+        "name": "route effect accuracy"
+      }
+    ],
+    "secondary": [
+      "calibration of the model's self-reported confidence against tier effect correctness (ECE, Brier, direction); the confidence is a self-report taken from the decisions log",
+      "run-to-run stability of the assigned tier (per-lead flip rate, per-run accuracy spread)",
+      "clean vs tricky gap; tier and route confusions by segment"
+    ]
+  },
+  "pins": {
+    "config_sha256": "1eab2964a1956e1c7fb010139129a8a8c838c809249658ba87b8188c56e45d3c",
+    "excluded": "this manifest and everything under docs/ are outside the pinned set; the run receipt binds the committed manifest and document by sha256 and git blob id instead",
+    "prompt_template_sha256": "593dbeca93df09887b79d145ccaee86f1208970b8cbe961acad7e503044d0ce4",
+    "scorer_files": [
+      "harness/integrity.py",
+      "harness/world.py",
+      "harness/world_grade.py"
+    ],
+    "scorer_sha256": "28c2c127a9e71abdf4d5814763f3251e06ccf8548891115863a6d34027a22627",
+    "source_files": {
+      "harness/__init__.py": "ffcf1676bebf73fd4a3a290a3f09b582ae6f75510fba7fef5eab690412af796a",
+      "harness/backends.py": "78588d43bfd793f05cd55e6a102c5341cf249f0a7029e5f1d48698d4107f1bf8",
+      "harness/integrity.py": "84e993ef8eab5b789228268bb3cc16f83a93047a9d1c8c2a480fda8c6965c5e3",
+      "harness/metrics.py": "baf83aae7eb810e8fcfcf098ea894b712054098e338555a25196e5d3f36be1d1",
+      "harness/pipeline.py": "ef965d53b3438c74a629a272e992665bb6b42de54c67e96aaae3c1133ae2f628",
+      "harness/prereg.py": "a82561e8c38abd5b3573b2f5bfa4a265a01533f95adf91a8865a236622c9804b",
+      "harness/report.py": "6d46aa172db58956c81b3c43a2a57f76270dd66cd9cb93c8c0ed0f6cc5282397",
+      "harness/runner.py": "f70087bd8c94cb074731ee057b2080cf6e57e5e353d8fc384f124d72772b36fd",
+      "harness/world.py": "b160f540b95dd384e3ca418b9afd19107dd0e0825c1bd9967af14b915e0a8e99",
+      "harness/world_grade.py": "729ee9f6689c405e4e8ce664404df8851cbf0b196fbadcdb4fb240e6485d0cc0",
+      "harness/world_report.py": "5667cd27febae32254e2d44d0e3ae7fd62cb481725d82dc087307a7bbfa91e30",
+      "harness/world_runner.py": "5a88a08d0deccf63e93da1080d91c458abe5c0096bb6b0e082c9961caaaa1d08",
+      "run_world_eval.py": "c44e009e507eba16be77f7826d09256f3b10f4c2233e9fced7292238a60387c8",
+      "scripts/generate_leads.py": "71009588b18aa080bd6096bc8add25d64660316ad24e06bca981eb9bd1a21340",
+      "scripts/grade_world.py": "994cb62068430b0ef79ebf99c291767722dcd4f1d320c69ca61d4d462d70c7a8",
+      "scripts/prereg.py": "ddb33038bd1a563c3a60510b26068d3f09ff053d4abe6fb1a416d446c3de5cd6",
+      "scripts/world_report.py": "f129e3a83370e83ee0eacd32ab4b0f2aec1aa02d03c1079275a830e83bf16813"
+    },
+    "source_set_sha256": "52025676a50e474a5a9126ec8e5eae34726604f12fa274afdf29c44c54347a22"
+  },
+  "registered_date": "2026-11-14",
+  "schema": "gtm-preregistration/1",
+  "smoke": {
+    "design": "first 12 leads, 1 run, all three arms: 24 model calls, 36 decisions",
+    "purpose": "pipeline health check (CLI reachable, answers parseable) before the primary run",
+    "rules": "optional; completes at most once, before any primary attempt (a smoke attempt aborted by a CLI failure may be repeated and is disclosed); its numbers are outside the primary counts and are never pooled; its 12 leads are also in the primary run and this overlap is disclosed; no pinned input may change between the smoke and the primary run"
+  },
+  "stopping": {
+    "optional_stopping": "none: there is no interim look; an attempt ends only by completing all 1080 planned decisions or by a CLI failure",
+    "partial_output": "an aborted attempt keeps its .partial directory, has no manifest, is never graded or pooled, and is disclosed",
+    "restart": "after an aborted attempt, a fresh attempt may run the full plan from the start in a new attempt directory; the first COMPLETE attempt is the primary result and no further attempts are made; each receipt lists all earlier attempts",
+    "rule": "the run aborts on the first CLI failure with no retries"
+  },
+  "title": "GTM lead-qualification eval v2: world-state grading replication of v1",
+  "units": {
+    "independent_cases": "120 leads",
+    "lead_runs_per_arm": "120 leads x 3 runs = 360",
+    "model_calls": "treatment 360 + placebo 360 = 720 (baseline is deterministic rules, 0 model calls)",
+    "note": "360 lead-runs per arm are NOT 360 independent cases; between-arm comparisons are paired per lead (n = 120).",
+    "total_decisions": "3 arms x 360 = 1080"
+  }
+}

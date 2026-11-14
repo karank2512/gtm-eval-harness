@@ -1,0 +1,28 @@
+{
+  "artifacts": {
+    "decisions.jsonl": "382bc9493bb432d879bdf498711448a7d3ee1dc4a89e35cfc60007647ea89afa",
+    "plan.json": "e80e33f831fe865a4468980d41937e9b74110f690e45869290c1ecd4d69ae482",
+    "receipt.json": "c3b8bc267acbb96ecb64c1a3229c36dc9a4f2572a54b969d33070c0f29f8637a",
+    "world.sqlite": "9afc86c15e059dbae0ea202de34b008acf17218d5299e259f3eca9bf5f2f8092"
+  },
+  "cli_reported_models": [],
+  "completed_at_utc": "2026-11-14T05:36:02Z",
+  "counts": {
+    "decisions_logged": 1080,
+    "events": 1080,
+    "model_calls": 720,
+    "planned_trials": 1080,
+    "worlds": 9
+  },
+  "dataset_sha256": "3b40af0733f0b768c04695d60726c295c7e536a320ea69aebd993b49e5b72277",
+  "event_chain_head": "05962b5f29e59a4307e1da17e0e801c0be3796d3b24df7976718697eba100984",
+  "grading": "v2-world-state",
+  "kind": "mock",
+  "plan_sha256": "e80e33f831fe865a4468980d41937e9b74110f690e45869290c1ecd4d69ae482",
+  "preregistered": false,
+  "schema": "gtm-world-run/1",
+  "seal_sha256": "ee3d72706dfe629d88387a063ea31c39327784cbba12954b596f5246b8e07b9d",
+  "started_at_utc": "2026-11-14T05:36:01Z",
+  "state": "complete",
+  "warning": "MOCK BACKEND: deterministic test double, not a language model. These numbers check harness math only."
+}

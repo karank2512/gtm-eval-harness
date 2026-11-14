@@ -1,6 +1,8 @@
-# GTM lead-qualification eval - report
+# GTM lead-qualification eval - report (v1 legacy grading)
 
-Generated 2026-11-14 from `results/example-mock.jsonl`. Every number below is recomputed from that file by `scripts/report.py`; none are typed by hand.
+Generated from `results/example-mock.jsonl` (run date not recorded in this run's v1 metadata). Every number below is recomputed from that file by `scripts/report.py`; none are typed by hand.
+
+**V1 LEGACY GRADING:** correctness here is the qualifier's parsed answer compared with labels stored in the same results log. There is no CRM world-state evidence behind these numbers, the run was not preregistered, and unparseable answers are counted separately rather than in the accuracy denominators. World-state grading is the separate v2 mode (`run_world_eval.py`, `scripts/world_report.py`).
 
 ## Setup
 
@@ -12,10 +14,11 @@ Generated 2026-11-14 from `results/example-mock.jsonl`. Every number below is re
 
 ## Headline
 
-1. The pipeline routes 59.4% of leads to the right tier (214/360).
-2. On leads designed to fool it, accuracy is 42.7% (41/96) vs 65.5% on clean leads (173/264).
-3. Confidence is calibrated to ECE 0.231 over 360 scored calls
-4. Re-running the same leads flips the tier call on 11.9% of lead-runs (120 leads x repeated runs).
+1. Tier calls are near ceiling on this dataset: 59.4% of lead-runs tiered correctly (214/360).
+2. Routing is not: 57.8% of lead-runs routed correctly (208/360) - -107 lead-runs vs the deterministic rules baseline (315/360, 87.5%), so on this dataset the model's routing buys almost nothing over free rules.
+3. On leads designed to fool it, tier accuracy drops to 42.7% (41/96) vs 65.5% on clean leads (173/264).
+4. Confidence is overconfident on this set: mean confidence 0.69 vs actual tier accuracy 59.4% (ECE 0.231), Brier 0.214 over 360 scored calls.
+5. Re-running the same leads flips the tier call on 11.9% of lead-runs (120 leads x repeated runs).
 
 ## Arm: baseline
 
@@ -173,6 +176,14 @@ Mean per-lead flip rate: 11.9% across 120 leads; accuracy spread across runs: 5.
 | 2 | 70/120 | 58.3% |
 
 Mean per-lead flip rate: 11.9% across 120 leads; accuracy spread across runs: 3.3%.
+
+## Limits
+
+- 120 synthetic leads x 3 repeats each: the per-arm row counts are lead-runs, not independent leads. Repeated runs of one lead share its label and its signals.
+- The placebo arm uses one fixed seeded derangement. A different permutation gives a different placebo number; treat it as a sanity floor, not a precise estimate.
+- Labels are hand-designed and unambiguous by construction. Real funnel data has contested labels, missing signals and drift; accuracy here is an upper bound, not a promise.
+- The dataset is synthetic and shaped like a generic PLG free-to-paid motion. It is not any company's production data.
+- Every claim is about this prompt + this model + this dataset. Change any of the three and re-run before reusing a number.
 
 ## How to reproduce
 
