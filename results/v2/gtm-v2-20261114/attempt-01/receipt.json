@@ -1,0 +1,64 @@
+{
+  "backend": {
+    "backend": "claude-code",
+    "cli_working_directory": "empty scratch directory",
+    "disable_tools": true,
+    "extra_args": [],
+    "launcher": "custom launcher (path not recorded)",
+    "model": "claude-fable-5-2",
+    "no_session_persistence": true,
+    "timeout_s": 180
+  },
+  "config": {
+    "arms": [
+      "treatment",
+      "placebo",
+      "baseline"
+    ],
+    "limit": null,
+    "n_leads": 120,
+    "n_model_calls": 720,
+    "n_trials": 1080,
+    "runs": 3,
+    "seed": 20261114
+  },
+  "dataset_sha256": "3b40af0733f0b768c04695d60726c295c7e536a320ea69aebd993b49e5b72277",
+  "environment": {
+    "platform": "darwin",
+    "python": "3.13.2",
+    "sqlite": "3.51.2"
+  },
+  "grading": "v2-world-state",
+  "kind": "preregistered-primary",
+  "plan_sha256": "e80e33f831fe865a4468980d41937e9b74110f690e45869290c1ecd4d69ae482",
+  "preregistered": true,
+  "preregistration": {
+    "attempt": 1,
+    "config_sha256": "1eab2964a1956e1c7fb010139129a8a8c838c809249658ba87b8188c56e45d3c",
+    "dataset_sha256": "3b40af0733f0b768c04695d60726c295c7e536a320ea69aebd993b49e5b72277",
+    "document_git_blob": "92985f043e2f34128b6dd5826e5838e52fae8aac",
+    "document_path": "docs/preregistrations/gtm-v2-20261114.md",
+    "document_sha256": "128ef27846b38210d7685106e38fadfd8728db3e8cd2018c580e953c1f838212",
+    "earlier_attempts": [],
+    "gates_passed": [
+      "manifest regenerates byte-identically from the working tree (dataset, source, prompt, scorer, config and plan hashes)",
+      "manifest, document, dataset and every pinned source file are committed at HEAD and unmodified",
+      "no uncommitted changes to experiment inputs"
+    ],
+    "git_commit": "d8d0d9d3404d0a70a6b256f51e91da29b8dbe9d1",
+    "git_commit_time": "2026-11-14T05:46:00Z",
+    "id": "gtm-v2-20261114",
+    "manifest_git_blob": "2aa67da4d102a33a0a3c50f7ce36aa0b8de4e8e6",
+    "manifest_path": "docs/preregistrations/gtm-v2-20261114.manifest.json",
+    "manifest_sha256": "bee5c5daac153e4bb84e9d3aad1d557bd019b2db049596f6aa6d739c3271e1c8",
+    "prompt_template_sha256": "593dbeca93df09887b79d145ccaee86f1208970b8cbe961acad7e503044d0ce4",
+    "results_root": "registered",
+    "scorer_sha256": "28c2c127a9e71abdf4d5814763f3251e06ccf8548891115863a6d34027a22627",
+    "slot": "primary",
+    "source_set_sha256": "52025676a50e474a5a9126ec8e5eae34726604f12fa274afdf29c44c54347a22"
+  },
+  "schema": "gtm-run-receipt/1",
+  "started_at_utc": "2026-11-14T05:46:24Z",
+  "stopping_rule": "abort on the first CLI failure, no retries; an aborted run has no manifest and is never graded as complete",
+  "warning": null
+}
